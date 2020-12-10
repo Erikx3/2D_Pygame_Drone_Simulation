@@ -23,7 +23,7 @@ class Environment:
         # Define conversion rate between pixel and metres
         self.m_to_pxl = 100
 
-        # ---------- Further Init ----------
+        # ---------- Rest of init (DO NOT CHANGE) ----------
         # Initialize pygame
         pygame.init()
         # Create the screen object

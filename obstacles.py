@@ -1,16 +1,19 @@
 """ File to handle all kind of obstacles in the game"""
 
 import pygame
+import numpy as np
 
 
 class Obstacles:
     def __init__(self, environment):
         self.env = environment
-        self.base_wall = ((0, 0),
-                          (self.env.PLAYGROUND_WIDTH, 0),
-                          (self.env.PLAYGROUND_WIDTH, self.env.SCREEN_HEIGHT),
-                          (0, self.env.SCREEN_HEIGHT),
-                          (0, 0))
+        self.base_wall = np.array(
+            [[0, 0],
+             [self.env.PLAYGROUND_WIDTH/self.env.m_to_pxl, 0],
+             [self.env.PLAYGROUND_WIDTH/self.env.m_to_pxl, self.env.SCREEN_HEIGHT/self.env.m_to_pxl],
+             [0, self.env.SCREEN_HEIGHT/self.env.m_to_pxl],
+             [0, 0]]  # in [m]
+        )
         self.all_obstacles = [self.base_wall]
 
     def draw_all_obstacles(self):
@@ -20,6 +23,7 @@ class Obstacles:
                 line_width = 4
             else:
                 line_width = 1
+            obstacle = obstacle * self.env.m_to_pxl  # Convert from metre to pxl
             pygame.draw.lines(surface=self.env.screen,
                               color=self.env.BLACK,
                               closed=False,

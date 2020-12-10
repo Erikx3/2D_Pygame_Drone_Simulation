@@ -7,7 +7,6 @@ from environment import Environment
 from obstacles import Obstacles
 from drone import Drone
 
-
 if __name__ == "__main__":
 
     # Initialize Environment

@@ -1,6 +1,7 @@
 """ File to handle all drone physics, capabilities etc."""
 
 import pygame
+import numpy as np
 
 
 class Drone:
@@ -8,14 +9,18 @@ class Drone:
         # Make environment accessible
         self.env = environment
 
-        self.x0 = self.env.PLAYGROUND_WIDTH/2  # Initial Position in x [m]
-        self.y0 = self.env.SCREEN_HEIGHT-100  # Initial Position in y [m]
+        # --------- Settings ---------
+        self.x0 = (self.env.PLAYGROUND_WIDTH / 2) / self.env.m_to_pxl  # Initial Position in x [m]
+        self.y0 = (self.env.SCREEN_HEIGHT - 100) / self.env.m_to_pxl  # Initial Position in y [m]
+        self.radius = 0.3  # [m]
 
+        # --------- Rest of init (DO NOT CHANGE) ---------
+
+        # Set state values
         self.x = self.x0
         self.y = self.y0
 
-        self.radius = 0.3  # [m]
-
+        # Load drone image
         img_path = "img/drone.png"
         self.img = pygame.image.load(img_path)
         # Rescale to drone size
@@ -24,7 +29,5 @@ class Drone:
 
     def draw_drone(self):
         img_rect = self.img.get_rect()
-        img_rect.center = (self.x, self.y)
-
+        img_rect.center = np.array([self.x, self.y]) * self.env.m_to_pxl
         self.env.screen.blit(self.img, img_rect)
-
