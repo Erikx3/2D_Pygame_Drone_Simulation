@@ -13,13 +13,12 @@ class Environment:
         self.GREEN = (0, 255, 0)
         self.RED = (255, 0, 0)
         self.GRAY = (150, 150, 150)
+        self.YELLOW_t = (255, 255, 0, 100)
         # Define screen width and height
         self.SCREEN_WIDTH = 1200
         self.SCREEN_HEIGHT = 800
         # Define width of where Simulation takes place
         self.PLAYGROUND_WIDTH = self.SCREEN_WIDTH * 2 / 3
-        # TODO: Add doc that one pixel corresponds to 1 cm and that everything is calculated in metres, only when we
-        #  blit something we need to convert it back to pixels!!
         # Define conversion rate between pixel and metres
         self.m_to_pxl = 100
 
@@ -36,6 +35,34 @@ class Environment:
         self.running = True
         # Create game menu on the right
         self.create_game_menu()
+
+    def mysys_to_pygame(self, coord_array):
+        """
+        Convert coordinates into pygame coordinates (origin lower-left => top left, meters => pixel)
+
+        :param coord_array: numpy array with coordinates
+        """
+        coord_array = coord_array * self.m_to_pxl  # Unit conversion
+        # Change coord orig
+        if coord_array.ndim > 1:
+            coord_array[:, 1] = self.SCREEN_HEIGHT - coord_array[:, 1]
+        else:
+            coord_array[1] = self.SCREEN_HEIGHT - coord_array[1]
+        return coord_array
+
+    def pygame_to_mysys(self, coord_array):
+        """
+        Convert coordinates into my system coordinates (origin top-left => bottom-left, pixel => meters)
+
+        :param coord_array: numpy array with coordinates
+        """
+        # Change coord orig
+        if coord_array.ndim > 1:
+            coord_array[:, 1] = self.SCREEN_HEIGHT - coord_array[:, 1]
+        else:
+            coord_array[1] = self.SCREEN_HEIGHT - coord_array[1]
+        coord_array = coord_array/self.m_to_pxl  # Unit conversion
+        return coord_array
 
     def create_game_menu(self):
         # Add one more surface background for the buttons and the displays later

@@ -15,7 +15,7 @@ if __name__ == "__main__":
     # Initialize Obstacles
     obstacles = Obstacles(env)
 
-    # Initialize drone
+    # Initialize Drone
     drone = Drone(env)
 
     # Main loop
