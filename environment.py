@@ -5,6 +5,7 @@ import pygame
 
 class Environment:
     def __init__(self):
+        # --------- Environment Settings ---------
         # Define colors
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -17,6 +18,12 @@ class Environment:
         self.SCREEN_HEIGHT = 800
         # Define width of where Simulation takes place
         self.PLAYGROUND_WIDTH = self.SCREEN_WIDTH * 2 / 3
+        # TODO: Add doc that one pixel corresponds to 1 cm and that everything is calculated in metres, only when we
+        #  blit something we need to convert it back to pixels!!
+        # Define conversion rate between pixel and metres
+        self.m_to_pxl = 100
+
+        # ---------- Further Init ----------
         # Initialize pygame
         pygame.init()
         # Create the screen object
@@ -39,7 +46,7 @@ class Environment:
         self.screen.blit(panel_surf, (self.PLAYGROUND_WIDTH, 0))  # (0,0) are the top-left coordinates
         # panel bar description
         self.display_text("Game Menu",
-                          (self.PLAYGROUND_WIDTH+(self.SCREEN_WIDTH-self.PLAYGROUND_WIDTH)/2, 50),
+                          (self.PLAYGROUND_WIDTH + (self.SCREEN_WIDTH - self.PLAYGROUND_WIDTH) / 2, 50),
                           fontsize=30)
 
     def display_text(self, text: str, pos: tuple, fontsize: int = 12) -> None:
@@ -55,3 +62,18 @@ class Environment:
         text_rect = text_surface.get_rect()
         text_rect.center = pos
         self.screen.blit(text_surface, text_rect)
+
+    def check_quit_event(self, event):
+        """
+        Function to make sure games stops when user wants to
+
+        :param event: pygame input event
+        """
+        # Check for KEYDOWN event
+        if event.type == pygame.KEYDOWN:
+            # If the Esc key is pressed, then exit the main loop
+            if event.key == pygame.K_ESCAPE:
+                self.running = False
+        # Check for QUIT event.
+        elif event.type == pygame.QUIT:
+            self.running = False
