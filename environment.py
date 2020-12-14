@@ -25,6 +25,9 @@ class Environment:
         # ---------- Rest of init (DO NOT CHANGE) ----------
         # Initialize pygame
         pygame.init()
+        # Create clock
+        self.clock = pygame.time.Clock()
+        self.dt = 0
         # Create the screen object
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         # Set Caption
@@ -35,6 +38,10 @@ class Environment:
         self.running = True
         # Create game menu on the right
         self.create_game_menu()
+
+    def update(self):
+        # TODO: Check of "Fixing time Step" is necessary
+        self.dt = self.clock.tick_busy_loop(60) / 1000  # [s]
 
     def mysys_to_pygame(self, coord_array):
         """
@@ -75,6 +82,10 @@ class Environment:
         self.display_text("Game Menu",
                           (self.PLAYGROUND_WIDTH + (self.SCREEN_WIDTH - self.PLAYGROUND_WIDTH) / 2, 50),
                           fontsize=30)
+
+    def draw_environment(self):
+        self.screen.fill(self.WHITE)
+        self.create_game_menu()
 
     def display_text(self, text: str, pos: tuple, fontsize: int = 12) -> None:
         """

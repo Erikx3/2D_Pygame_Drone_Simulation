@@ -20,14 +20,26 @@ if __name__ == "__main__":
 
     # Main loop
     while env.running:
+
+        # Update all environment variables first (dt)
+        env.update()
+
         # for loop through the event queue
         for event in pygame.event.get():
             env.check_quit_event(event)
 
+        # Update Physics
+        drone.update_physics()
+
+        # Draw environment
+        env.draw_environment()
+
         # Draw all obstacles
         obstacles.draw_all_obstacles()
+
         # Draw drone position
         drone.draw_drone()
 
         # Update the display
         pygame.display.flip()
+

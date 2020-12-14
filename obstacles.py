@@ -14,6 +14,7 @@ class Obstacles:
              [0, self.env.SCREEN_HEIGHT/self.env.m_to_pxl],
              [0, 0]]  # in [m]
         )
+        #test_wall = np.array([[1, 1.2], [5.3, 5]])  # in [m]
         self.all_obstacles = [self.base_wall]
 
     def draw_all_obstacles(self):
@@ -22,8 +23,8 @@ class Obstacles:
             if i == 0:
                 line_width = 4
             else:
-                line_width = 1
-            obstacle = obstacle * self.env.m_to_pxl  # Convert from metre to pxl
+                line_width = 2
+            obstacle = self.env.mysys_to_pygame(obstacle)   # Convert from metre to pxl and coord origin
             pygame.draw.lines(surface=self.env.screen,
                               color=self.env.BLACK,
                               closed=False,
