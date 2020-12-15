@@ -29,8 +29,11 @@ if __name__ == "__main__":
             # Get Keys which are held down
             pressed = pygame.key.get_pressed()
             drone.check_user_input(pressed)
-            # Check for quiting options
+            # Check environment related events
             env.check_quit_event(event)
+
+        # Check for collision
+        drone.check_collision(obstacles.all_obstacles)
 
         # Update Physics
         drone.update_physics()

@@ -14,8 +14,8 @@ class Obstacles:
              [0, self.env.SCREEN_HEIGHT/self.env.m_to_pxl],
              [0, 0]]  # in [m]
         )
-        #test_wall = np.array([[1, 1.2], [5.3, 5]])  # in [m]
-        self.all_obstacles = [self.base_wall]
+        test_wall = np.array([[1, 1.2], [5.3, 5], [2, 1]])  # in [m]
+        self.all_obstacles = [self.base_wall, test_wall]
 
     def draw_all_obstacles(self):
         for i, obstacle in enumerate(self.all_obstacles):

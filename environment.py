@@ -37,6 +37,7 @@ class Environment:
         self.screen.fill(self.WHITE)
         # Variable to keep the main loop running
         self.running = True
+        self.paused = False
         # Create help variables
         self.MENU_MID_COORD = self.PLAYGROUND_WIDTH + (self.SCREEN_WIDTH - self.PLAYGROUND_WIDTH) / 2
 
@@ -121,3 +122,19 @@ class Environment:
         # Check for QUIT event.
         elif event.type == pygame.QUIT:
             self.running = False
+            self.paused = False
+
+    def pause(self, text):
+        self.paused = True
+
+        while self.paused:
+            for event in pygame.event.get():
+                self.check_quit_event(event)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_c:
+                        self.paused = False
+
+            self.display_text(text, (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2), 80)
+            self.display_text("Press C to continue", (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2 + 100), 40)
+            # Update the display
+            pygame.display.flip()
