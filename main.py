@@ -26,6 +26,10 @@ if __name__ == "__main__":
 
         # for loop through the event queue
         for event in pygame.event.get():
+            # Get Keys which are held down
+            pressed = pygame.key.get_pressed()
+            drone.check_user_input(pressed)
+            # Check for quiting options
             env.check_quit_event(event)
 
         # Update Physics
@@ -37,8 +41,8 @@ if __name__ == "__main__":
         # Draw all obstacles
         obstacles.draw_all_obstacles()
 
-        # Draw drone position
-        drone.draw_drone()
+        # Draw drone position and info
+        drone.update_draw()
 
         # Update the display
         pygame.display.flip()

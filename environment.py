@@ -28,6 +28,7 @@ class Environment:
         # Create clock
         self.clock = pygame.time.Clock()
         self.dt = 0
+        self.total_time = 0
         # Create the screen object
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         # Set Caption
@@ -36,12 +37,13 @@ class Environment:
         self.screen.fill(self.WHITE)
         # Variable to keep the main loop running
         self.running = True
-        # Create game menu on the right
-        self.create_game_menu()
+        # Create help variables
+        self.MENU_MID_COORD = self.PLAYGROUND_WIDTH + (self.SCREEN_WIDTH - self.PLAYGROUND_WIDTH) / 2
 
     def update(self):
         # TODO: Check of "Fixing time Step" is necessary
         self.dt = self.clock.tick_busy_loop(60) / 1000  # [s]
+        self.total_time += self.dt  # [s]
 
     def mysys_to_pygame(self, coord_array):
         """
@@ -80,25 +82,29 @@ class Environment:
         self.screen.blit(panel_surf, (self.PLAYGROUND_WIDTH, 0))  # (0,0) are the top-left coordinates
         # panel bar description
         self.display_text("Game Menu",
-                          (self.PLAYGROUND_WIDTH + (self.SCREEN_WIDTH - self.PLAYGROUND_WIDTH) / 2, 50),
+                          (self.MENU_MID_COORD, 50),
                           fontsize=30)
 
     def draw_environment(self):
         self.screen.fill(self.WHITE)
         self.create_game_menu()
 
-    def display_text(self, text: str, pos: tuple, fontsize: int = 12) -> None:
+    def display_text(self, text: str, pos, fontsize: int = 12, align: str = 'center') -> None:
         """
         Function to create text with coordinates given in center!
 
+        :param align: left or center alignment
         :param text: Text to display
-        :param pos: center position of text as tuple coordinate
+        :param pos: center position of text
         :param fontsize: fontsize number
         """
         my_font = pygame.font.SysFont('Comic Sans MS', fontsize)
         text_surface = my_font.render(text, False, self.BLACK)
         text_rect = text_surface.get_rect()
-        text_rect.center = pos
+        if align == 'center':
+            text_rect.center = pos
+        else:
+            text_rect.midleft = pos
         self.screen.blit(text_surface, text_rect)
 
     def check_quit_event(self, event):
