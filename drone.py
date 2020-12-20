@@ -92,9 +92,9 @@ class Drone(pygame.sprite.Sprite):
         speed_rot_str = "Rotational Speed: " + str(np.round(self.r, 2))
         # Need to transform for user, since positive angle in my x-y coord would mean left around is positive
         heading_str = "Heading: " + str(abs(np.round(self.psi * 180 / np.pi - 360, 1)))
-        self.env.display_text(speed_t_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 20), 18)
-        self.env.display_text(speed_rot_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 60), 18)
-        self.env.display_text(heading_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 120), 18)
+        self.env.display_text(speed_t_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 10), 18)
+        self.env.display_text(speed_rot_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 30), 18)
+        self.env.display_text(heading_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 50), 18)
 
     def draw_drone(self):
         img = pygame.transform.rotozoom(self.orig_img, self.psi*180/np.pi, 1)
@@ -161,4 +161,3 @@ class Drone(pygame.sprite.Sprite):
         self.M = 0  # total moment [Nm]
         self.M_drag = 0
         self.M_user = 0.0
-
