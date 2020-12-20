@@ -40,7 +40,7 @@ if __name__ == "__main__":
         obstacles.draw_all_obstacles()
 
         # Only Update Drone, if game is in flying mode
-        if env.flying and ~env.paused:
+        if env.flying and not env.paused:
             # Check for collision
             drone.check_collision(obstacles.all_obstacles)
             # Update Physics

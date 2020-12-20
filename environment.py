@@ -40,6 +40,7 @@ class Environment:
         self.paused = False
         self.flying = True
         self.editor = False
+        self.pause_text = 'Pause'
         # Create help variables
         self.MENU_MID_COORD = self.PLAYGROUND_WIDTH + (self.SCREEN_WIDTH - self.PLAYGROUND_WIDTH) / 2
         # Create buttons for menu later
@@ -97,6 +98,7 @@ class Environment:
     def draw_environment(self):
         self.screen.fill(self.WHITE)
         self.create_game_menu()
+        self.draw_pause()
 
     def display_text(self, text: str, pos, fontsize: int = 12, align: str = 'center') -> None:
         """
@@ -159,20 +161,14 @@ class Environment:
             self.running = False
             self.paused = False
 
+    def draw_pause(self):
+        if self.paused:
+            self.display_text(self.pause_text, (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2), 80)
+            self.display_text("Press C to continue", (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2 + 100), 40)
+
     def pause(self, text):
         self.paused = True
-
-        while self.paused:
-            for event in pygame.event.get():
-                self.check_quit_event(event)
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_c:
-                        self.paused = False
-
-            self.display_text(text, (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2), 80)
-            self.display_text("Press C to continue", (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2 + 100), 40)
-            # Update the display
-            pygame.display.flip()
+        self.pause_text = text
 
 
 class Button:
