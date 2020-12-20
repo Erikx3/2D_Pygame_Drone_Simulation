@@ -27,12 +27,24 @@ class Obstacles:
                 line_width = 4
             else:
                 line_width = 2
-            obstacle = self.env.mysys_to_pygame(obstacle)   # Convert from metre to pxl and coord origin
+            for point in obstacle:
+                pygame.draw.circle(self.env.screen, self.env.BLACK, self.env.mysys_to_pygame(point), 2)
+            obstacle = self.env.mysys_to_pygame(obstacle)  # Convert from metre to pxl and coord origin
             pygame.draw.lines(surface=self.env.screen,
                               color=self.env.BLACK,
                               closed=False,
                               points=obstacle,
                               width=line_width)
+        # Draw temporary coord list, which are in the making during editing
+        if len(self.temp_coord_list) >= 2:
+            pygame.draw.lines(surface=self.env.screen,
+                              color=self.env.BLUE,
+                              closed=False,
+                              points=self.temp_coord_list,
+                              width=line_width)
+        # Care: Points are still in pygame system, since temporary list
+        for point in self.temp_coord_list:
+            pygame.draw.circle(self.env.screen, self.env.BLUE, point, 2)
 
     def check_user_input(self, event):
         # Pygame internal variables
