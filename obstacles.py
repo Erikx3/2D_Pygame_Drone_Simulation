@@ -17,6 +17,9 @@ class Obstacles:
         test_wall = np.array([[1, 1.2], [5.3, 5], [2, 1]])  # in [m]
         self.all_obstacles = [self.base_wall, test_wall]
 
+        # Temporary list of coordinates during editor mode
+        self.temp_coord_list = []
+
     def draw_all_obstacles(self):
         for i, obstacle in enumerate(self.all_obstacles):
             # Change line width for first outer boundaries
@@ -30,3 +33,17 @@ class Obstacles:
                               closed=False,
                               points=obstacle,
                               width=line_width)
+
+    def check_user_input(self, event):
+        # Pygame internal variables
+        LEFT = 1
+        RIGHT = 3
+        mouse_pos = pygame.mouse.get_pos()
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and self.env.is_over_playground(mouse_pos):
+            self.temp_coord_list.append(list(mouse_pos))
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and self.env.is_over_playground(mouse_pos):
+            self.temp_coord_list.append(list(mouse_pos))
+            # Append temporary list of coordinates to all obstacles in my coordinate system
+            self.all_obstacles.append(self.env.pygame_to_mysys(np.array(self.temp_coord_list)))
+            # Reset temp coord list
+            self.temp_coord_list = []

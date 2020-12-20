@@ -170,6 +170,18 @@ class Environment:
         self.paused = True
         self.pause_text = text
 
+    def is_over_playground(self, pos):
+        """
+        Function to check, if input coordinates are within playground area
+
+        :param pos: original pygame coordinates
+        """
+
+        if 0 < pos[0] < self.PLAYGROUND_WIDTH:
+            if 0 < pos[1] < self.SCREEN_HEIGHT:
+                return True
+        return False
+
 
 class Button:
     def __init__(self, environment, color, x, y, width, height, text='', fontsize=30):
