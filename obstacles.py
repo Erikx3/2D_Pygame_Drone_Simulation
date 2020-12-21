@@ -14,8 +14,8 @@ class Obstacles:
              [0, self.env.SCREEN_HEIGHT/self.env.m_to_pxl],
              [0, 0]]  # in [m]
         )
-        test_wall = np.array([[1, 1.2], [5.3, 5], [2, 1]])  # in [m]
-        self.all_obstacles = [self.base_wall, test_wall]
+
+        self.all_obstacles = [self.base_wall]
 
         # Temporary list of coordinates during editor mode
         self.temp_coord_list = []
@@ -41,7 +41,7 @@ class Obstacles:
                               color=self.env.BLUE,
                               closed=False,
                               points=self.temp_coord_list,
-                              width=line_width)
+                              width=2)
         # Care: Points are still in pygame system, since temporary list
         for point in self.temp_coord_list:
             pygame.draw.circle(self.env.screen, self.env.BLUE, point, 2)
@@ -51,11 +51,21 @@ class Obstacles:
         LEFT = 1
         RIGHT = 3
         mouse_pos = pygame.mouse.get_pos()
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and self.env.is_over_playground(mouse_pos):
-            self.temp_coord_list.append(list(mouse_pos))
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and self.env.is_over_playground(mouse_pos):
-            self.temp_coord_list.append(list(mouse_pos))
-            # Append temporary list of coordinates to all obstacles in my coordinate system
-            self.all_obstacles.append(self.env.pygame_to_mysys(np.array(self.temp_coord_list)))
-            # Reset temp coord list
+        if self.env.editor:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and self.env.is_over_playground(mouse_pos):
+                self.temp_coord_list.append(list(mouse_pos))
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and self.env.is_over_playground(mouse_pos):
+                #self.temp_coord_list.append(list(mouse_pos))
+                if len(self.temp_coord_list) >= 2:
+                    # Append temporary list of coordinates to all obstacles in my coordinate system
+                    self.all_obstacles.append(self.env.pygame_to_mysys(np.array(self.temp_coord_list)))
+                # Reset temp coord list
+                self.temp_coord_list = []
+        else:
             self.temp_coord_list = []
+        if self.env.editor_reset:
+            self.env.editor_reset = False
+            self.reset_obstacles()
+
+    def reset_obstacles(self):
+        self.all_obstacles = [self.base_wall]

@@ -38,14 +38,17 @@ class Environment:
         # Boolean Variables to keep track of main loop modes
         self.running = True
         self.paused = False
-        self.flying = True
-        self.editor = False
         self.pause_text = 'Pause'
         # Create help variables
         self.MENU_MID_COORD = self.PLAYGROUND_WIDTH + (self.SCREEN_WIDTH - self.PLAYGROUND_WIDTH) / 2
-        # Create buttons for menu later
-        self.editor_button = Button(self, self.RED, self.MENU_MID_COORD + 80, 150, 100, 70, 'Editor')
-        self.fly_button = Button(self, self.GREEN, self.MENU_MID_COORD - 80, 150, 100, 70, 'Fly')
+        # Create buttons for menu and boolean variables
+        self.editor_button = Button(environment=self, color=self.RED, x=self.MENU_MID_COORD + 80,
+                                    y=150, width=100, height=67, text='Editor')
+        self.editor = False
+        self.fly_button = Button(self, self.GREEN, self.MENU_MID_COORD - 80, 150, 100, 67, 'Fly')
+        self.flying = True
+        self.editor_reset_button = Button(self, self.GRAY, self.MENU_MID_COORD + 80, 220, 75, 50, 'Reset', fontsize=22)
+        self.editor_reset = False
 
     def update(self):
         # TODO: Check if "Fixing time Step" is necessary
@@ -94,6 +97,7 @@ class Environment:
         # Draw buttons!
         self.editor_button.draw()
         self.fly_button.draw()
+        self.editor_reset_button.draw()
 
     def draw_environment(self):
         self.screen.fill(self.WHITE)
@@ -137,6 +141,8 @@ class Environment:
                 self.editor_button.color = self.RED
                 self.flying = True
                 self.editor = False
+            if self.editor_reset_button.is_over(mouse_pos):
+                self.editor_reset = True
         if event.type == pygame.KEYDOWN:
             # Check if user wants to pause the game
             if event.key == pygame.K_p:
