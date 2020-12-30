@@ -3,9 +3,10 @@
 import pygame
 import numpy as np
 from tools.circle_line_intersection import circle_line_intersection
+import random
 
 
-class Drone(pygame.sprite.Sprite):
+class Drone:
     def __init__(self, environment):
         # Make environment accessible
         self.env = environment
@@ -14,7 +15,7 @@ class Drone(pygame.sprite.Sprite):
         # TODO: Think about adding these to Game Menu
         self.radius = 0.15  # [m]
         self.drone_mass = 1  # [kg]
-        self.damp_t = 0.5  # translational damping [kg/s]
+        self.damp_t = 0.75  # translational damping [kg/s]
         self.damp_r = 0.05  # rotational damping [kg*m^2/s]
         self.F_user_max = 1
         self.M_user_max = 0.25
@@ -55,7 +56,20 @@ class Drone(pygame.sprite.Sprite):
         self.drone_circle = pygame.draw.circle(self.env.screen, self.env.YELLOW_t,
                                                self.env.mysys_to_pygame(self.pos), self.radius_pxl)
 
-    # TODO: Add vector with optional buttons for displaying
+        # Add IMU to drone
+        self.IMU = IMU(drone=self, log_rate=1.0, N_meas=500, noise_perc=0.05)
+
+    def update_physics(self):
+        self.calculate_forces()
+        self.equation_of_motion()
+        # TODO:
+        self.IMU.update(dt=self.env.dt)
+
+    def update_draw(self):
+        self.draw_drone()
+        self.draw_vectors()
+        self.draw_info()
+
     def equation_of_motion(self):
         self.body_to_nav = np.array([[np.cos(self.psi), -np.sin(self.psi)],
                                     [np.sin(self.psi), np.cos(self.psi)]])
@@ -77,15 +91,6 @@ class Drone(pygame.sprite.Sprite):
         # TODO: check rotation changes body's vel(acc)?? np.dot(np.array([[0, self.r], [-self.r, 0]]), self.speed)
         self.acc = self.F / self.drone_mass
         self.r_dot = self.M / self.J
-
-    def update_physics(self):
-        self.calculate_forces()
-        self.equation_of_motion()
-
-    def update_draw(self):
-        self.draw_drone()
-        self.draw_vectors()
-        self.draw_info()
 
     def draw_info(self):
         speed_t_str = "Translational Speed: " + str(np.round(self.speed_nav, 2))
@@ -161,3 +166,96 @@ class Drone(pygame.sprite.Sprite):
         self.M = 0  # total moment [Nm]
         self.M_drag = 0
         self.M_user = 0.0
+
+
+class MeasurementUnit:
+    def __init__(self, drone, log_rate, N_meas):
+        """
+        This class should be used for each measurement unit as a parent class
+
+        :param drone: drone it belongs to
+        :param log_rate: log rate the measurement will be updated with
+        :param N_meas: Number of measurements saved in the time sliding data array
+        """
+        self.drone = drone  # Drone Instance
+        self.log_rate = log_rate  # Logging rate in [s]
+        self.accumulator = 0.0  # Accumulator to check, if log time is reached
+        self.timestamp = 0.0
+        self.measurements = None  # Initiate measurement with next function
+        self.initialize_meas(N_meas)
+
+    def update(self, dt):
+        self.accumulator += dt
+        if self.accumulator >= self.log_rate:
+            new_meas = self.create_meas()
+            self.add_meas(new_meas)
+            self.accumulator -= self.log_rate
+        self.timestamp += dt
+
+    def get_current_meas(self):
+        return self.measurements[0]
+
+    def get_all_meas(self):
+        return self.measurements
+
+    def add_noise(self, data_list, perc):
+        """
+        Function to add random noise to a parameter by percentage
+        :param data_list: data to put noise on
+        :param perc: percentage of noise between 0 .. 1
+        :return: np.array data with noise on it
+        """
+
+        noise_perc = random.uniform(-perc, perc)  # Generate random noise
+        inp_data = np.array(data_list)  # make sure it is as array
+        data_with_noise = inp_data + noise_perc * inp_data
+        return data_with_noise
+
+    def add_meas(self, new_m):
+        """
+        Add new measurement to sliding data array
+
+        :param new_m: list or array with new measurements
+        """
+        self.measurements = np.vstack([new_m, self.measurements[0:-1]])
+
+    def create_meas(self):
+        """
+        This function is supposed to be overwritten and create one list of measurements.
+        This data should be generated artificially based on the real data of the drone for now.
+        It must have the following format, add a suitable doc:
+        :return [timestamp[s], data_1, data_2, ..., data_n]
+        """
+        new_meas = []
+        return new_meas
+
+    def initialize_meas(self, N_meas):
+        """
+        This function is supposed to be overwritten and create an initial array with row N_meas and number of columns n
+        according to the following format:
+        [timestamp, data_1, data_2, ..., data_n]
+        """
+        pass
+
+
+class IMU(MeasurementUnit):
+    def __init__(self, drone, log_rate, N_meas, noise_perc):
+        """
+        See parent class, added noise variable
+
+        :param noise_perc:
+        """
+        super().__init__(drone, log_rate, N_meas)
+        self.noise_perc = noise_perc
+
+    def create_meas(self):
+        acc_x = self.drone.acc[0]
+        acc_y = self.drone.acc[1]
+        omega_z = self.drone.r_dot
+        noise_data = self.add_noise([acc_x, acc_y, omega_z], self.noise_perc)
+        new_meas = np.hstack([self.timestamp, noise_data])
+        return new_meas  # AccX[m/s^2], AccY[m/s^2], OmegaZ[rad/s^2]
+
+    def initialize_meas(self, N_meas):
+        self.measurements = np.zeros((N_meas, 4))
+        self.measurements[0] = [self.timestamp, 0, 0, 0]  # AccX[m/s^2], AccY[m/s^2], OmegaZ[rad/s^2]
