@@ -50,6 +50,8 @@ class Environment:
         self.flying = True
         self.editor_reset_button = Button(self, self.GRAY, self.MENU_MID_COORD + 80, 220, 75, 50, 'Reset', fontsize=22)
         self.editor_reset = False
+        self.laser_button = Button(self, self.GREEN, self.MENU_MID_COORD - 80, 220, 75, 50, 'Laser', fontsize=22)
+        self.laser_flag = True
 
     def update(self):
         # TODO: Check if "Fixing time Step" is necessary
@@ -99,6 +101,7 @@ class Environment:
         self.editor_button.draw()
         self.fly_button.draw()
         self.editor_reset_button.draw()
+        self.laser_button.draw()
 
     def draw_environment(self):
         self.screen.fill(self.WHITE)
@@ -144,6 +147,10 @@ class Environment:
                 self.editor = False
             if self.editor_reset_button.is_over(mouse_pos):
                 self.editor_reset = True
+            if self.laser_button.is_over(mouse_pos):
+                self.laser_flag = not self.laser_flag
+                colors = [self.RED, self.GREEN]
+                self.laser_button.color = colors[int(self.laser_flag)]
         if event.type == pygame.KEYDOWN:
             # Check if user wants to pause the game
             if event.key == pygame.K_p:
@@ -157,13 +164,8 @@ class Environment:
 
         :param event: pygame input event
         """
-        # Check for KEYDOWN event
-        if event.type == pygame.KEYDOWN:
-            # If the Esc key is pressed, then exit the main loop
-            if event.key == pygame.K_ESCAPE:
-                self.running = False
         # Check for QUIT event.
-        elif event.type == pygame.QUIT:
+        if event.type == pygame.QUIT:
             self.running = False
             self.paused = False
 

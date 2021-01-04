@@ -25,8 +25,8 @@ class Drone:
         self.y0 = 100 / self.env.m_to_pxl  # Initial Position in y [m]
         self.psi0 = np.pi * 0/180
 
-        self.n_laser = 4  # Number of laser range measurements used
-        self.laser_max_range = 5  # Maximum range of lasers
+        self.n_laser = 5  # Number of laser range measurements used
+        self.laser_max_range = 3  # Maximum range of lasers
 
         # --------- Rest of init (DO NOT CHANGE) ---------
         # Load drone image
@@ -67,17 +67,17 @@ class Drone:
                            max_range=self.laser_max_range, noise_perc=0.05)
         self.measurement_units = [self.IMU, self.Laser]
         self.simulated_laser_range = np.zeros(self.n_laser)
-        self.simulated_laser_intercep_visual = np.zeros(self.n_laser*2).reshape(4, 2)
+        self.simulated_laser_intercep_visual = np.zeros(self.n_laser*2).reshape(self.n_laser, 2)
 
     def update_physics(self):
         self.calculate_forces()
         self.equation_of_motion()
         # Update all measurement unit
         [unit.update(dt=self.env.dt) for unit in self.measurement_units]
-        # TODO
-        #print(self.Laser.get_current_meas())
 
     def update_draw(self):
+        if self.env.laser_flag:
+            self.draw_laser()
         self.draw_drone()
         self.draw_vectors()
         self.draw_info()
@@ -127,10 +127,16 @@ class Drone:
 
     def draw_vectors(self):
         # Draw force vectors
-        max_user_F_length = 3*self.radius
+        max_user_F_length = 3 * self.radius
         endpoint = self.env.mysys_to_pygame(self.pos + np.dot(self.body_to_nav, self.F)
                                             / self.F_user_max * max_user_F_length)
-        pygame.draw.line(self.env.screen, self.env.RED, self.env.mysys_to_pygame(self.pos), endpoint)
+        pygame.draw.line(self.env.screen, self.env.BLUE, self.env.mysys_to_pygame(self.pos), endpoint)
+
+    def draw_laser(self):
+        for point in self.simulated_laser_intercep_visual:
+            p_t = self.env.mysys_to_pygame(point)
+            pygame.draw.line(self.env.screen, self.env.RED, self.env.mysys_to_pygame(self.pos), p_t)
+            pygame.draw.circle(self.env.screen, self.env.RED, p_t, 2)
 
     def check_user_input(self, pressed):
         self.F_user = np.array([0, 0])
@@ -217,8 +223,8 @@ class Drone:
             current_angle += angle_step
             temp_closest_dis = max_range
 
-        self.simulated_laser_intercep_visual = all_laser_p_visual
-        self.simulated_laser_range = all_laser_dis
+        self.simulated_laser_intercep_visual = np.array(all_laser_p_visual)
+        self.simulated_laser_range = np.array(all_laser_dis)
 
     def get_sim_laser_meas(self):
         """
@@ -357,7 +363,3 @@ class Laser(MeasurementUnit):
 
     def initialize_meas(self, N_meas):
         self.measurements = np.zeros((N_meas, self.n_laser+1))
-
-    def update(self, dt):
-        super().update(dt)
-        # TODO Add drawing method here

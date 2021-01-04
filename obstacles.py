@@ -63,6 +63,8 @@ class Obstacles:
                     self.all_obstacles.append(self.env.pygame_to_mysys(np.array(self.temp_coord_list)))
                 # Reset temp coord list
                 self.temp_coord_list = []
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.temp_coord_list = []
         else:
             self.temp_coord_list = []
         if self.env.editor_reset:
