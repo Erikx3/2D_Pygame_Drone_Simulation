@@ -108,9 +108,9 @@ class Drone:
         speed_rot_str = "Rotational Speed: " + str(np.round(self.r, 2))
         # Need to transform for user, since positive angle in my x-y coord would mean left around is positive
         heading_str = "Heading: " + str(abs(np.round(self.psi * 180 / np.pi - 360, 1)))
-        self.env.display_text(speed_t_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 10), 18)
-        self.env.display_text(speed_rot_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 30), 18)
-        self.env.display_text(heading_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 50), 18)
+        self.env.display_text(speed_t_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 10), 16)
+        self.env.display_text(speed_rot_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 30), 16)
+        self.env.display_text(heading_str, (self.env.MENU_MID_COORD, self.env.SCREEN_HEIGHT - 50), 16)
 
     def draw_drone(self):
         img = pygame.transform.rotozoom(self.orig_img, self.psi*180/np.pi, 1)
@@ -138,21 +138,33 @@ class Drone:
             pygame.draw.line(self.env.screen, self.env.RED, self.env.mysys_to_pygame(self.pos), p_t)
             pygame.draw.circle(self.env.screen, self.env.RED, p_t, 2)
 
+    def apply_forces(self, F, M):
+        """
+        This function should be used as an interface for other programs later to apply forces on drone
+
+        :param F: Translational Force as 2-dim array [N]
+        :param M: Rotational Force as 1 dim [Nm]
+        """
+
+        self.F_user = np.array(F)
+        self.M_user = M
+
     def check_user_input(self, pressed):
-        self.F_user = np.array([0, 0])
-        self.M_user = 0
+        M_temp = 0
+        F_temp = [0, 0]
         if pressed[pygame.K_LEFT]:
-            self.F_user[0] += -self.F_user_max
+            F_temp[0] += -self.F_user_max
         if pressed[pygame.K_RIGHT]:
-            self.F_user[0] += self.F_user_max
+            F_temp[0] += self.F_user_max
         if pressed[pygame.K_UP] or pressed[pygame.K_w]:
-            self.F_user[1] += self.F_user_max
+            F_temp[1] += self.F_user_max
         if pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
-            self.F_user[1] += -self.F_user_max
+            F_temp[1] += -self.F_user_max
         if pressed[pygame.K_a]:
-            self.M_user += self.M_user_max
+            M_temp += self.M_user_max
         if pressed[pygame.K_d]:
-            self.M_user += -self.M_user_max
+            M_temp += -self.M_user_max
+        self.apply_forces(F_temp, M_temp)
 
     def check_collision(self, all_line_obstacles):
         """

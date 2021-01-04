@@ -53,6 +53,10 @@ class Environment:
         self.laser_button = Button(self, self.GREEN, self.MENU_MID_COORD - 80, 220, 75, 50, 'Laser', fontsize=22)
         self.laser_flag = True
 
+        # Create Font beforehand to solve performance issues
+        self.standard_font_size = 16
+        self.my_font = pygame.font.SysFont('Comic Sans MS', self.standard_font_size)
+
     def update(self):
         # TODO: Check if "Fixing time Step" is necessary
         self.dt = self.clock.tick_busy_loop(60) / 1000  # [s]
@@ -86,6 +90,11 @@ class Environment:
         coord_array = coord_array/self.m_to_pxl  # Unit conversion
         return coord_array
 
+    def draw_environment(self):
+        self.screen.fill(self.WHITE)
+        self.create_game_menu()
+        self.draw_pause()
+
     def create_game_menu(self):
         # Add one more surface background for the buttons and the displays later
         panel_surf = pygame.Surface(
@@ -96,28 +105,77 @@ class Environment:
         # panel bar description
         self.display_text("Game Menu",
                           (self.MENU_MID_COORD, 50),
-                          fontsize=30)
+                          fontsize=30,
+                          under_line=True)
         # Draw buttons!
         self.editor_button.draw()
         self.fly_button.draw()
         self.editor_reset_button.draw()
         self.laser_button.draw()
 
-    def draw_environment(self):
-        self.screen.fill(self.WHITE)
-        self.create_game_menu()
-        self.draw_pause()
+        # Draw Instructions
+        self.create_instructions()
 
-    def display_text(self, text: str, pos, fontsize: int = 12, align: str = 'center') -> None:
+    def create_instructions(self):
+        c = 300
+        self.display_text(text='Instructions',
+                          pos=(self.MENU_MID_COORD, c),
+                          fontsize=22,
+                          align='center',
+                          under_line=True)
+        c += 40
+        self.display_text(text='In Flying Mode:',
+                          pos=(self.MENU_MID_COORD, c),
+                          fontsize=16,
+                          align='center')
+        flyingmode_texts = ["Up, Left, Down, Right: Input Force Body Frame",
+                            "W and S: Input Force Body Frame (alternative)",
+                            "A and D: Input Moment",
+                            "P: Pause"]
+        delta = 30
+        for text in flyingmode_texts:
+            c += delta
+            self.display_text(text=text,
+                              pos=(self.MENU_MID_COORD, c),
+                              fontsize=16,
+                              align='center')
+
+        c += 40
+        self.display_text(text='In Editor Mode:',
+                          pos=(self.MENU_MID_COORD, c),
+                          fontsize=16,
+                          align='center')
+
+        editormode_texts = ["Left Click: Add temporary point",
+                            "Right Click or Enter: Save temporary input",
+                            "Esc: Remove temporary input"]
+        for text in editormode_texts:
+            c += delta
+            self.display_text(text=text,
+                              pos=(self.MENU_MID_COORD, c),
+                              fontsize=16,
+                              align='center')
+
+    def draw_pause(self):
+        if self.paused:
+            self.display_text(self.pause_text, (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2), 80)
+            self.display_text("Press C to continue", (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2 + 100), 40)
+
+    def display_text(self, text: str, pos, fontsize: int = 16, align: str = 'center', under_line=False) -> None:
         """
         Function to create text with coordinates given in center!
 
         :param align: left or center alignment
         :param text: Text to display
-        :param pos: center position of text
-        :param fontsize: fontsize number
+        :param pos: center or left position of text
+        :param fontsize: fontsize number (only change of necessary, causes too much lag otherwise)
+        :param under_line: Decide if text should be underlined
         """
-        my_font = pygame.font.SysFont('Comic Sans MS', fontsize)
+        my_font = self.my_font
+        if fontsize != self.standard_font_size:
+            my_font = pygame.font.SysFont('Comic Sans MS', fontsize)
+        if under_line:
+            my_font.set_underline(True)
         text_surface = my_font.render(text, False, self.BLACK)
         text_rect = text_surface.get_rect()
         if align == 'center':
@@ -168,11 +226,6 @@ class Environment:
         if event.type == pygame.QUIT:
             self.running = False
             self.paused = False
-
-    def draw_pause(self):
-        if self.paused:
-            self.display_text(self.pause_text, (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2), 80)
-            self.display_text("Press C to continue", (self.PLAYGROUND_WIDTH / 2, self.SCREEN_HEIGHT / 2 + 100), 40)
 
     def pause(self, text):
         self.paused = True
