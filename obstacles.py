@@ -47,15 +47,17 @@ class Obstacles:
             pygame.draw.circle(self.env.screen, self.env.BLUE, point, 2)
 
     def check_user_input(self, event):
-        # Pygame internal variables
+        # Pygame internal variables for left and right mouse click
         LEFT = 1
         RIGHT = 3
         mouse_pos = pygame.mouse.get_pos()
         if self.env.editor:
+            # Add coordinate temporary to list
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT and self.env.is_over_playground(mouse_pos):
                 self.temp_coord_list.append(list(mouse_pos))
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and self.env.is_over_playground(mouse_pos):
-                #self.temp_coord_list.append(list(mouse_pos))
+            # Add all points to coordinates when user uses right click or hits return in editor mode
+            if (event.type == pygame.MOUSEBUTTONDOWN and event.button == RIGHT and self.env.is_over_playground(mouse_pos)) or \
+                    (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN):
                 if len(self.temp_coord_list) >= 2:
                     # Append temporary list of coordinates to all obstacles in my coordinate system
                     self.all_obstacles.append(self.env.pygame_to_mysys(np.array(self.temp_coord_list)))

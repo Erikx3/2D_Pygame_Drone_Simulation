@@ -6,6 +6,16 @@ import pygame
 class Environment:
     def __init__(self):
         # --------- Environment Settings ---------
+        # Define conversion rate between pixel and metres
+        self.m_to_pxl = 100
+        # Define screen width and height (possible to change, but not recommended, since menu bar not dynamically
+        # scaled yet)
+        self.SCREEN_WIDTH = 1200
+        self.SCREEN_HEIGHT = 800
+
+        # ---------- Rest of init (DO NOT CHANGE) ----------
+        # Initialize pygame
+        pygame.init()
         # Define colors
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -14,15 +24,6 @@ class Environment:
         self.RED = (255, 0, 0)
         self.GRAY = (150, 150, 150)
         self.YELLOW_t = (255, 255, 0, 100)
-        # Define conversion rate between pixel and metres
-        self.m_to_pxl = 100
-
-        # ---------- Rest of init (DO NOT CHANGE) ----------
-        # Initialize pygame
-        pygame.init()
-        # Define screen width and height (possible to change, but not recommended)
-        self.SCREEN_WIDTH = 1200
-        self.SCREEN_HEIGHT = 800
         # Define width of where Simulation takes place
         self.PLAYGROUND_WIDTH = self.SCREEN_WIDTH * 2 / 3
         # Create clock
@@ -149,7 +150,6 @@ class Environment:
                 self.pause("Pause")
             if event.key == pygame.K_c:
                 self.paused = False
-        # TODO: Add reset button (for environment and for drone)!
 
     def check_quit_event(self, event):
         """

@@ -3,6 +3,7 @@
 import pygame
 import numpy as np
 from tools.circle_line_intersection import circle_line_intersection
+from tools.line_intersect import line_intersection, distance
 import random
 
 
@@ -22,7 +23,10 @@ class Drone:
 
         self.x0 = (self.env.PLAYGROUND_WIDTH / 2) / self.env.m_to_pxl  # Initial Position in x [m]
         self.y0 = 100 / self.env.m_to_pxl  # Initial Position in y [m]
-        self.psi0 = 0
+        self.psi0 = np.pi * 0/180
+
+        self.n_laser = 4  # Number of laser range measurements used
+        self.laser_max_range = 5  # Maximum range of lasers
 
         # --------- Rest of init (DO NOT CHANGE) ---------
         # Load drone image
@@ -52,18 +56,26 @@ class Drone:
                                     [0, 0]])  # Init transformation matrix
         self.J = 0.5*self.drone_mass*self.radius**2  # Inertia formula for thin circular disk
 
-        # Add drone circle for collision detection later
+        # Add colorized drone circle for collision detection later
         self.drone_circle = pygame.draw.circle(self.env.screen, self.env.YELLOW_t,
                                                self.env.mysys_to_pygame(self.pos), self.radius_pxl)
 
-        # Add IMU to drone
+        # Create measurement unit list
+        # Add IMU and Laser to drone
         self.IMU = IMU(drone=self, log_rate=1.0, N_meas=500, noise_perc=0.05)
+        self.Laser = Laser(drone=self, log_rate=1.0, N_meas=500, n_laser=self.n_laser,
+                           max_range=self.laser_max_range, noise_perc=0.05)
+        self.measurement_units = [self.IMU, self.Laser]
+        self.simulated_laser_range = np.zeros(self.n_laser)
+        self.simulated_laser_intercep_visual = np.zeros(self.n_laser*2).reshape(4, 2)
 
     def update_physics(self):
         self.calculate_forces()
         self.equation_of_motion()
-        # TODO:
-        self.IMU.update(dt=self.env.dt)
+        # Update all measurement unit
+        [unit.update(dt=self.env.dt) for unit in self.measurement_units]
+        # TODO
+        #print(self.Laser.get_current_meas())
 
     def update_draw(self):
         self.draw_drone()
@@ -75,7 +87,7 @@ class Drone:
                                     [np.sin(self.psi), np.cos(self.psi)]])
         # simple semi-implicit-euler used here
         self.speed_nav = self.speed_nav + np.dot(self.body_to_nav, self.acc) * self.env.dt
-        self.speed = np.dot(np.linalg.inv(self.body_to_nav), self.speed_nav)
+        self.speed = np.dot(np.linalg.inv(self.body_to_nav), self.speed_nav)  # More stable to reverse it again here
         self.pos = self.pos + self.speed_nav * self.env.dt
         self.r = self.r + self.r_dot * self.env.dt
         self.psi = (self.psi + self.r * self.env.dt + 2 * np.pi) % (2 * np.pi)  # Values are always between 0 and 2 pi
@@ -88,7 +100,6 @@ class Drone:
         self.F = self.F_user + self.F_drag
         self.M = self.M_user + self.M_drag
         # Calculate accelerations
-        # TODO: check rotation changes body's vel(acc)?? np.dot(np.array([[0, self.r], [-self.r, 0]]), self.speed)
         self.acc = self.F / self.drone_mass
         self.r_dot = self.M / self.J
 
@@ -149,6 +160,9 @@ class Drone:
                     self.env.pause("YOU CRASHED")
                     self.reset_drone()
 
+        # TODO Help function placed here for now to access obstacles, think about good way of refactoring
+        self.simulate_laser_meas(self.n_laser, self.laser_max_range, all_line_obstacles)
+
     def reset_drone(self):
         # Set navigation frame values
         self.pos = np.array([self.x0, self.y0])  # x and y
@@ -167,6 +181,53 @@ class Drone:
         self.M_drag = 0
         self.M_user = 0.0
 
+        # Reset Measurement units
+        [unit.reset() for unit in self.measurement_units]
+
+    def simulate_laser_meas(self, no_laser, max_range, all_line_obs):
+        """
+        Help function to generate true laser range measurements
+        (update self.simulated_laser_range and points for visualization)
+
+        :param max_range: maximum range of laser measurement
+        :param all_line_obs: list of np.ndarrays (dim=2) containing coordinates of lines
+        :param no_laser: number of lasers
+        """
+        angle_step = 2*np.pi/no_laser
+        current_angle = 0.0
+        all_laser_dis = []  # Init to gather all laser meas
+        all_laser_p_visual = []  # Init to gather all points for visualization
+        temp_closest_dis = max_range  # Init
+        for i_laser in range(no_laser):
+            T_laser_b_to_nav = np.array([-np.sin(self.psi + current_angle), np.cos(self.psi + current_angle)])
+            # Second point in navigation frame for current laser iteration
+            max_laser_point = self.pos + T_laser_b_to_nav * max_range
+            for coords in all_line_obs:
+                for i_coord in range(len(coords) - 1):
+                    intersec = line_intersection([coords[i_coord], coords[i_coord+1]], [self.pos, max_laser_point])
+                    # Check if intersection available
+                    if intersec:
+                        temp_closest_dis = distance(self.pos, intersec)
+                        max_laser_point = intersec  # When used like this, we always check to closes point found before
+            # TODO: Check, what a laser would return, when out of laser range
+            if temp_closest_dis == max_range:
+                temp_closest_dis = np.nan
+            all_laser_dis.append(temp_closest_dis)
+            all_laser_p_visual.append(max_laser_point)
+            current_angle += angle_step
+            temp_closest_dis = max_range
+
+        self.simulated_laser_intercep_visual = all_laser_p_visual
+        self.simulated_laser_range = all_laser_dis
+
+    def get_sim_laser_meas(self):
+        """
+        
+        :return: [lasermeas_1, lasermeas_2, ..., lasermeas_n]
+        """
+        
+        return self.simulated_laser_range
+
 
 class MeasurementUnit:
     def __init__(self, drone, log_rate, N_meas):
@@ -182,7 +243,8 @@ class MeasurementUnit:
         self.accumulator = 0.0  # Accumulator to check, if log time is reached
         self.timestamp = 0.0
         self.measurements = None  # Initiate measurement with next function
-        self.initialize_meas(N_meas)
+        self.N_meas = N_meas
+        self.initialize_meas(self.N_meas)
 
     def update(self, dt):
         self.accumulator += dt
@@ -191,6 +253,11 @@ class MeasurementUnit:
             self.add_meas(new_meas)
             self.accumulator -= self.log_rate
         self.timestamp += dt
+
+    def reset(self):
+        self.accumulator = 0.0  # Accumulator to check, if log time is reached
+        self.timestamp = 0.0
+        self.initialize_meas(self.N_meas)
 
     def get_current_meas(self):
         return self.measurements[0]
@@ -243,19 +310,54 @@ class IMU(MeasurementUnit):
         """
         See parent class, added noise variable
 
-        :param noise_perc:
+        :param noise_perc: Percentage of noise in measurement (w.r.t to absolute value)
         """
         super().__init__(drone, log_rate, N_meas)
-        self.noise_perc = noise_perc
+        self.noise_perc = noise_perc  # Add percentage noise to previous call, could choose other forms aswell
 
     def create_meas(self):
+        """
+
+        :return: list with [timestamp[s], AccX[m/s^2], AccY[m/s^2], OmegaZ[rad/s^2]]
+        """
         acc_x = self.drone.acc[0]
         acc_y = self.drone.acc[1]
         omega_z = self.drone.r_dot
         noise_data = self.add_noise([acc_x, acc_y, omega_z], self.noise_perc)
         new_meas = np.hstack([self.timestamp, noise_data])
-        return new_meas  # AccX[m/s^2], AccY[m/s^2], OmegaZ[rad/s^2]
+        return new_meas
 
     def initialize_meas(self, N_meas):
         self.measurements = np.zeros((N_meas, 4))
         self.measurements[0] = [self.timestamp, 0, 0, 0]  # AccX[m/s^2], AccY[m/s^2], OmegaZ[rad/s^2]
+
+
+class Laser(MeasurementUnit):
+    def __init__(self, drone, log_rate, N_meas, n_laser, max_range, noise_perc):
+        """
+        See parent class, added noise variable and number of lasers
+
+        :param noise_perc: Percentage of noise in measurement (w.r.t to absolute value)
+        """
+        self.n_laser = n_laser  # Number of laser coming from the drone
+        self.max_range = max_range
+        super().__init__(drone, log_rate, N_meas)
+        self.noise_perc = noise_perc  # Add percentage noise for each laser measurement and choose number of laser
+
+    def create_meas(self):
+        """
+
+        :return: list with [timestamp[s], laserrange_1[m], laserrange_2[m], ... , laserrange_n[m]]
+        """
+
+        new_laser_meas = self.drone.get_sim_laser_meas()
+        noise_data = self.add_noise(new_laser_meas, self.noise_perc)
+        new_meas = np.hstack([self.timestamp, noise_data])
+        return new_meas
+
+    def initialize_meas(self, N_meas):
+        self.measurements = np.zeros((N_meas, self.n_laser+1))
+
+    def update(self, dt):
+        super().update(dt)
+        # TODO Add drawing method here
