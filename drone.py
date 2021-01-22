@@ -6,6 +6,17 @@ from tools.circle_line_intersection import circle_line_intersection
 from tools.line_intersect import line_intersection, distance
 import random
 
+# Drone Settings
+RADIUS = 0.15  # [m] | Default: 0.15
+DRONE_MASS = 1  # [kg] | Default: 1
+DAMP_TRANSLATIONAL = 0.75  # translational damping [kg/s] | Default: 0.75
+DAMP_ROTATIONAL = 0.05  # rotational damping [kg*m^2/s] | Default: 0.05
+F_USER_MAX = 1  # [N] Input by user to control drone | Default: 1
+M_USER_MAX = 0.25  # [Nm] | Default: 0.25
+
+NUMBER_LASER = 4  # Number of laser from drone | Default: 4
+LASER_RANGE_MAX = 3  # Maximum range of lasers in [m] | Default: 3
+
 
 class Drone:
     def __init__(self, environment):
@@ -13,20 +24,20 @@ class Drone:
         self.env = environment
 
         # --------- Settings ---------
-        # TODO: Think about adding these to Game Menu
-        self.radius = 0.15  # [m]
-        self.drone_mass = 1  # [kg]
-        self.damp_t = 0.75  # translational damping [kg/s]
-        self.damp_r = 0.05  # rotational damping [kg*m^2/s]
-        self.F_user_max = 1
-        self.M_user_max = 0.25
+        self.radius = RADIUS  # [m]
+        self.drone_mass = DRONE_MASS  # [kg]
+        self.damp_t = DAMP_TRANSLATIONAL  # translational damping [kg/s]
+        self.damp_r = DAMP_ROTATIONAL  # rotational damping [kg*m^2/s]
+        self.F_user_max = F_USER_MAX
+        self.M_user_max = M_USER_MAX
 
+        self.n_laser = NUMBER_LASER  # Number of laser range measurements used
+        self.laser_max_range = LASER_RANGE_MAX  # Maximum range of lasers in [m]
+
+        # Initial position, change if wanted
         self.x0 = (self.env.PLAYGROUND_WIDTH / 2) / self.env.m_to_pxl  # Initial Position in x [m]
         self.y0 = 100 / self.env.m_to_pxl  # Initial Position in y [m]
-        self.psi0 = np.pi * 0/180
-
-        self.n_laser = 5  # Number of laser range measurements used
-        self.laser_max_range = 3  # Maximum range of lasers
+        self.psi0 = np.pi * 0 / 180
 
         # --------- Rest of init (DO NOT CHANGE) ---------
         # Load drone image
@@ -76,6 +87,7 @@ class Drone:
         [unit.update(dt=self.env.dt) for unit in self.measurement_units]
 
     def update_draw(self):
+        # Order is important
         if self.env.laser_flag:
             self.draw_laser()
         self.draw_drone()
@@ -178,7 +190,8 @@ class Drone:
                     self.env.pause("YOU CRASHED")
                     self.reset_drone()
 
-        # TODO Help function placed here for now to access obstacles, think about good way of refactoring
+        # TODO Help function for creating true artificial laser measurements placed here for now to access obstacles,
+        #  think about good way of refactoring
         self.simulate_laser_meas(self.n_laser, self.laser_max_range, all_line_obstacles)
 
     def reset_drone(self):
@@ -205,7 +218,7 @@ class Drone:
     def simulate_laser_meas(self, no_laser, max_range, all_line_obs):
         """
         Help function to generate true laser range measurements
-        (update self.simulated_laser_range and points for visualization)
+        (This updates self.simulated_laser_range and points for visualization)
 
         :param max_range: maximum range of laser measurement
         :param all_line_obs: list of np.ndarrays (dim=2) containing coordinates of lines

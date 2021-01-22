@@ -32,7 +32,7 @@ if __name__ == "__main__":
             # Check environment related events
             env.check_quit_event(event)
             env.check_user_input(event)
-            # Check user input if in editor mode
+            # Check user input for editor mode
             obstacles.check_user_input(event)
 
         # Draw environment

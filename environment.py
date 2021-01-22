@@ -2,16 +2,21 @@
 
 import pygame
 
+# Settings for environment:
+METER_TO_PIXEL = 100  # Factor to scale playground between pixel and meters (default drone size is ~0.3m)
+SCREEN_WIDTH = 1200  # Minimum Recommended: 1100
+SCREEN_HEIGHT = 800  # Minimum recommended: 700
+
 
 class Environment:
     def __init__(self):
         # --------- Environment Settings ---------
         # Define conversion rate between pixel and metres
-        self.m_to_pxl = 100
+        self.m_to_pxl = METER_TO_PIXEL
         # Define screen width and height (possible to change, but not recommended, since menu bar not dynamically
         # scaled yet)
-        self.SCREEN_WIDTH = 1200
-        self.SCREEN_HEIGHT = 800
+        self.SCREEN_WIDTH = SCREEN_WIDTH
+        self.SCREEN_HEIGHT = SCREEN_HEIGHT
 
         # ---------- Rest of init (DO NOT CHANGE) ----------
         # Initialize pygame
@@ -62,34 +67,6 @@ class Environment:
         self.dt = self.clock.tick_busy_loop(60) / 1000  # [s]
         self.total_time += self.dt  # [s]
 
-    def mysys_to_pygame(self, coord_array):
-        """
-        Convert coordinates into pygame coordinates (origin lower-left => top left, meters => pixel)
-
-        :param coord_array: numpy array with coordinates
-        """
-        coord_array = coord_array * self.m_to_pxl  # Unit conversion
-        # Change coord orig
-        if coord_array.ndim > 1:
-            coord_array[:, 1] = self.SCREEN_HEIGHT - coord_array[:, 1]
-        else:
-            coord_array[1] = self.SCREEN_HEIGHT - coord_array[1]
-        return coord_array
-
-    def pygame_to_mysys(self, coord_array):
-        """
-        Convert coordinates into my system coordinates (origin top-left => bottom-left, pixel => meters)
-
-        :param coord_array: numpy array with coordinates
-        """
-        # Change coord orig
-        if coord_array.ndim > 1:
-            coord_array[:, 1] = self.SCREEN_HEIGHT - coord_array[:, 1]
-        else:
-            coord_array[1] = self.SCREEN_HEIGHT - coord_array[1]
-        coord_array = coord_array/self.m_to_pxl  # Unit conversion
-        return coord_array
-
     def draw_environment(self):
         self.screen.fill(self.WHITE)
         self.create_game_menu()
@@ -114,9 +91,9 @@ class Environment:
         self.laser_button.draw()
 
         # Draw Instructions
-        self.create_instructions()
+        self.create_instructions_text()
 
-    def create_instructions(self):
+    def create_instructions_text(self):
         c = 300
         self.display_text(text='Instructions',
                           pos=(self.MENU_MID_COORD, c),
@@ -243,6 +220,34 @@ class Environment:
                 return True
         return False
 
+    def mysys_to_pygame(self, coord_array):
+        """
+        Convert coordinates into pygame coordinates (origin lower-left => top left, meters => pixel)
+
+        :param coord_array: numpy array with coordinates
+        """
+        coord_array = coord_array * self.m_to_pxl  # Unit conversion
+        # Change coord orig
+        if coord_array.ndim > 1:
+            coord_array[:, 1] = self.SCREEN_HEIGHT - coord_array[:, 1]
+        else:
+            coord_array[1] = self.SCREEN_HEIGHT - coord_array[1]
+        return coord_array
+
+    def pygame_to_mysys(self, coord_array):
+        """
+        Convert coordinates into my system coordinates (origin top-left => bottom-left, pixel => meters)
+
+        :param coord_array: numpy array with coordinates
+        """
+        # Change coord orig
+        if coord_array.ndim > 1:
+            coord_array[:, 1] = self.SCREEN_HEIGHT - coord_array[:, 1]
+        else:
+            coord_array[1] = self.SCREEN_HEIGHT - coord_array[1]
+        coord_array = coord_array/self.m_to_pxl  # Unit conversion
+        return coord_array
+
 
 class Button:
     def __init__(self, environment, color, x, y, width, height, text='', fontsize=30):
@@ -262,9 +267,15 @@ class Button:
         :param outline: Whether button should have black outline
         """
         if outline:
-            pygame.draw.rect(self.env.screen, self.env.BLACK, (self.x - self.width/2 - 2, self.y - self.height/2 - 2, self.width + 4, self.height + 4), 0)
+            pygame.draw.rect(self.env.screen,
+                             self.env.BLACK,
+                             (self.x - self.width/2 - 2, self.y - self.height/2 - 2, self.width + 4, self.height + 4),
+                             0)
 
-        pygame.draw.rect(self.env.screen, self.color, (self.x - self.width/2, self.y - self.height/2, self.width, self.height), 0)
+        pygame.draw.rect(self.env.screen,
+                         self.color,
+                         (self.x - self.width/2, self.y - self.height/2, self.width, self.height),
+                         0)
 
         if self.text != '':
             font = pygame.font.SysFont('Comic Sans MS', self.fontsize)
