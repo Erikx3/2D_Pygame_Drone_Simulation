@@ -17,6 +17,8 @@ M_USER_MAX = 0.25  # [Nm] | Default: 0.25
 NUMBER_LASER = 4  # Number of laser from drone | Default: 4
 LASER_RANGE_MAX = 3  # Maximum range of lasers in [m] | Default: 3
 
+# If you want to change initial position, see in Drone init function
+
 
 class Drone:
     def __init__(self, environment):
